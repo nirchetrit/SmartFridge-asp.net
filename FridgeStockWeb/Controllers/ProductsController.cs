@@ -17,11 +17,28 @@ namespace FridgeStockWeb.Controllers
         private ApplicationDbContext db = new ApplicationDbContext();
 
         // GET: Products
-        public ActionResult Index()
+        public ActionResult Index(string searchString)
         {
-            var currentUserId = User.Identity.GetUserId();
+            var productNameList = new List<string>();
 
-            return View(db.Products.Where(p => p.UserID == currentUserId).ToList());
+
+            var NameQry = from d in db.Products
+                           orderby d.name
+                           select d.name;
+
+            productNameList.AddRange(NameQry.Distinct());
+            ViewBag.searchString = new SelectList(productNameList);
+
+            var currentUserId = User.Identity.GetUserId();
+            var products = db.Products.Where(p => p.UserID == currentUserId).ToList();
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                products = products.Where(s => s.name.Contains(searchString)).ToList();
+            }
+
+
+                return View(products);
         }
 
         // GET: Products/Details/5
